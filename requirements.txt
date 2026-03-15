@@ -1,5 +1,4 @@
 groq
-pexels-api
 edge-tts
 moviepy==1.0.3
 google-api-python-client

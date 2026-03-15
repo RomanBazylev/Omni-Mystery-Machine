@@ -34,6 +34,7 @@ from youtube_uploader import upload_to_youtube
 @dataclass
 class ScriptPart:
     text: str
+    visual_hint: str = ""  # one of VISUAL_CATEGORIES keys
 
 @dataclass
 class VideoMetadata:
@@ -61,31 +62,18 @@ TTS_VOICES = [
 ]
 TTS_RATE_OPTIONS = ["+5%", "+8%", "+10%"]
 
-# ── Hardcoded Pexels queries — never let LLM choose ───────────────
+# ── Hardcoded Pexels queries by category ───────────────────────────
 PEXELS_QUERIES = [
+    # Space
     "dark space galaxy nebula",
     "planet earth orbit night",
     "stars universe deep field",
     "astronaut space station dark",
     "moon surface crater closeup",
     "milky way timelapse night sky",
-    "aurora borealis northern lights",
     "rocket launch space night",
     "satellite orbit earth dark",
     "solar system planets dark",
-    "ocean deep underwater dark",
-    "lightning storm dark sky",
-    "ancient ruins mystery dark",
-    "foggy forest mystery dark",
-    "abandoned building dark mystery",
-    "cave underground dark explore",
-    "volcano eruption night lava",
-    "desert night sky stars",
-    "underwater deep sea creatures",
-    "pyramid egypt ancient night",
-    "ice glacier frozen landscape",
-    "dark tunnel underground mystery",
-    "meteor shower night sky",
     "nebula colorful space deep",
     "mars red planet surface",
     "saturn rings planet space",
@@ -93,7 +81,93 @@ PEXELS_QUERIES = [
     "jupiter clouds planet space",
     "telescope observatory night",
     "supernova star explosion space",
+    "meteor shower night sky",
+    "black hole visualization dark",
+    "space shuttle launch fire",
+    "earth sunrise from space",
+    # Ocean / deep sea
+    "ocean deep underwater dark",
+    "underwater deep sea creatures",
+    "coral reef ocean dark",
+    "jellyfish underwater glowing",
+    "whale underwater ocean deep",
+    "submarine deep ocean dark",
+    "underwater volcanic vent",
+    "bioluminescent ocean creatures",
+    # Mystery / ruins
+    "ancient ruins mystery dark",
+    "foggy forest mystery dark",
+    "abandoned building dark mystery",
+    "cave underground dark explore",
+    "pyramid egypt ancient night",
+    "dark tunnel underground mystery",
+    "ancient temple jungle overgrown",
+    "stone circle ancient monument",
+    "hieroglyphs ancient wall carving",
+    "old library dusty books dark",
+    # Nature / extreme
+    "aurora borealis northern lights",
+    "volcano eruption night lava",
+    "desert night sky stars",
+    "ice glacier frozen landscape",
+    "lightning storm dark sky",
+    "tornado storm dark clouds",
+    "waterfall jungle tropical mist",
+    "arctic ice landscape frozen",
+    # Technology / sci-fi
+    "laboratory science experiment dark",
+    "circuit board technology macro",
+    "radar screen technology green",
+    "data visualization abstract dark",
+    "drone flying night lights",
+    "robot arm technology dark",
+    "hologram futuristic technology",
+    "microscope science closeup",
+    "dna molecule science animation",
 ]
+
+# ── Visual category mapping (LLM picks a hint, we map to queries) ─
+VISUAL_CATEGORIES = {
+    "space": [
+        "dark space galaxy nebula", "stars universe deep field",
+        "nebula colorful space deep", "black hole visualization dark",
+        "earth sunrise from space", "meteor shower night sky",
+    ],
+    "planet": [
+        "planet earth orbit night", "mars red planet surface",
+        "saturn rings planet space", "jupiter clouds planet space",
+        "solar system planets dark", "moon surface crater closeup",
+    ],
+    "ocean": [
+        "ocean deep underwater dark", "underwater deep sea creatures",
+        "jellyfish underwater glowing", "bioluminescent ocean creatures",
+        "submarine deep ocean dark", "underwater volcanic vent",
+    ],
+    "ruins": [
+        "ancient ruins mystery dark", "pyramid egypt ancient night",
+        "ancient temple jungle overgrown", "stone circle ancient monument",
+        "hieroglyphs ancient wall carving", "old library dusty books dark",
+    ],
+    "mystery": [
+        "foggy forest mystery dark", "abandoned building dark mystery",
+        "cave underground dark explore", "dark tunnel underground mystery",
+    ],
+    "nature": [
+        "aurora borealis northern lights", "volcano eruption night lava",
+        "lightning storm dark sky", "tornado storm dark clouds",
+        "ice glacier frozen landscape", "desert night sky stars",
+    ],
+    "technology": [
+        "radar screen technology green", "data visualization abstract dark",
+        "circuit board technology macro", "laboratory science experiment dark",
+        "microscope science closeup", "dna molecule science animation",
+    ],
+    "astronaut": [
+        "astronaut space station dark", "space shuttle launch fire",
+        "rocket launch space night", "satellite orbit earth dark",
+        "telescope observatory night",
+    ],
+}
 
 # ── Pixabay queries (backup source) ────────────────────────────────
 PIXABAY_QUERIES = [
@@ -105,6 +179,14 @@ PIXABAY_QUERIES = [
     "volcano lava eruption",
     "ancient ruins temple",
     "foggy forest mystery",
+    "aurora borealis sky",
+    "submarine deep sea",
+    "pyramid desert ancient",
+    "meteor falling sky",
+    "black hole space",
+    "coral reef underwater",
+    "cave dark explore",
+    "rocket launch fire",
 ]
 
 # ── Blacklist — skip clips whose tags contain these words ──────────
@@ -119,28 +201,129 @@ _BLACKLIST_WORDS = {
     "office", "business", "classroom", "student",
 }
 
-# ── Mystery/space topics for prompt variety ────────────────────────
+# ── Banned filler phrases for quality gate ─────────────────────────
+_FILLER_PATTERNS = [
+    "you won't believe",
+    "this is amazing",
+    "trust me",
+    "here's the thing",
+    "let that sink in",
+    "think about that",
+    "are you ready",
+    "brace yourself",
+    "in this video",
+    "stay tuned",
+    "subscribe for more",
+    "like and share",
+]
+
+# ── Mystery/space topics for prompt variety (100+) ────────────────
 TOPICS = [
+    # Space & cosmos
     "black holes and singularities",
     "dark matter and dark energy",
     "the Fermi Paradox",
-    "deep ocean unexplored zones",
-    "the Bermuda Triangle",
-    "ancient lost civilizations",
-    "Area 51 and UFO sightings",
-    "the Wow signal from space",
     "rogue planets wandering the galaxy",
     "the Great Attractor pulling galaxies",
     "quantum entanglement and teleportation",
     "the multiverse theory",
     "the Dyson Sphere concept",
-    "uncontacted tribes on Earth",
     "the Voyager golden record",
     "magnetars and neutron stars",
-    "the Tunguska event 1908",
-    "the Mariana Trench deepest point",
     "the simulation hypothesis",
     "gamma ray bursts destroying galaxies",
+    "the dark side of the Moon",
+    "the Bootes Void — emptiest place in space",
+    "Oumuamua — the interstellar visitor",
+    "Tabby's Star and the alien megastructure theory",
+    "the Great Silence — why can't we hear aliens",
+    "the Kessler Syndrome — space junk apocalypse",
+    "the heat death of the universe",
+    "time dilation near black holes",
+    "the Kardashev scale — levels of civilization",
+    "the Pale Blue Dot photo by Voyager 1",
+    "white holes — the opposite of black holes",
+    "the Big Crunch vs Big Rip theories",
+    "Alcubierre warp drive — FTL travel",
+    "the Hubble Deep Field image",
+    "the cosmic microwave background radiation",
+    "Sagittarius A* — our galaxy's supermassive black hole",
+    "the Oort Cloud at the edge of our solar system",
+    "Enceladus and its underground ocean",
+    "Titan — the only moon with an atmosphere",
+    "Europa and potential alien life under ice",
+    "the Great Red Spot of Jupiter",
+    "solar flares and Carrington events",
+    "the asteroid that killed the dinosaurs",
+    "Planet Nine — the hidden giant",
+    "pulsars and their lighthouse beams",
+    "the heliopause — where our Sun's influence ends",
+    "dark flow — galaxies moving toward something invisible",
+    "the Observable Universe — 46 billion light years",
+    # Ocean & deep sea
+    "deep ocean unexplored zones",
+    "the Mariana Trench deepest point",
+    "bioluminescent life in the deep ocean",
+    "the Bloop — mysterious ocean sound",
+    "giant squid — real sea monsters",
+    "deep sea hydrothermal vents and extremophiles",
+    "the Mid-Atlantic Ridge underwater mountains",
+    "underwater rivers and waterfalls in the ocean",
+    "ocean dead zones where nothing survives",
+    "the Bermuda Triangle",
+    "the Baltic Sea anomaly",
+    "phantom islands that appeared on maps but don't exist",
+    # Mystery & unexplained
+    "Area 51 and UFO sightings",
+    "the Wow signal from space",
+    "the Tunguska event 1908",
+    "the Nazca Lines of Peru",
+    "the Antikythera mechanism",
+    "the Eye of the Sahara / Richat Structure",
+    "ancient lost civilizations",
+    "uncontacted tribes on Earth",
+    "the Voynich Manuscript nobody can decode",
+    "the Dyatlov Pass incident",
+    "the Zodiac Killer's unsolved ciphers",
+    "the Mary Celeste ghost ship",
+    "Stonehenge and how it was built",
+    "the Piri Reis map showing Antarctica before discovery",
+    "the Chelyabinsk meteor 2013",
+    "the Hessdalen lights in Norway",
+    "the Taos Hum — a sound only some people hear",
+    "the Oak Island Money Pit",
+    "the disappearance of the Roanoke colony",
+    "DB Cooper — the only unsolved hijacking",
+    "the Somerton Man and Tamam Shud case",
+    "Gobekli Tepe — 12,000-year-old temple complex",
+    "the Baghdad Battery — ancient electricity",
+    "the Copper Scroll treasure map",
+    "the lost city of Atlantis theories",
+    "the Bermeja island that vanished from maps",
+    # Science & physics
+    "the double slit experiment and consciousness",
+    "the Mandela Effect and false memories",
+    "CRISPR gene editing and designer humans",
+    "the speed of light as a universal limit",
+    "antimatter and why it's the most expensive substance",
+    "the Higgs Boson and the God Particle",
+    "string theory and extra dimensions",
+    "the Grandfather Paradox of time travel",
+    "quantum tunneling through solid walls",
+    "the Mpemba effect — hot water freezing faster",
+    "Boltzmann brains floating in empty space",
+    "the Vacuum Catastrophe of quantum physics",
+    # Biology & Earth
+    "tardigrades — the indestructible animals",
+    "the Chicxulub crater and mass extinction",
+    "supervolcano Yellowstone and when it erupts",
+    "the Permian extinction — 96% of life died",
+    "the Tsar Bomba — most powerful explosion ever",
+    "the Doomsday Vault in Svalbard Norway",
+    "Lake Vostok buried under 2 miles of Antarctic ice",
+    "the Sentinelese — most isolated people on Earth",
+    "extremophile bacteria living inside nuclear reactors",
+    "the Sahara Desert was once a green jungle",
 ]
 
 ANGLES = [
@@ -152,6 +335,14 @@ ANGLES = [
     "the most dangerous thing in space",
     "facts that will keep you up at night",
     "the unsolved mystery of",
+    "what happens when you go too deep",
+    "the biggest lie they told you about space",
+    "the discovery that changed everything",
+    "why this terrifies even NASA scientists",
+    "the hidden truth nobody talks about",
+    "the experiment that went horribly wrong",
+    "the place on Earth no human can survive",
+    "the signal that came from nowhere",
 ]
 
 
@@ -275,6 +466,8 @@ def call_groq_for_script() -> tuple:
         "Respond ONLY with valid JSON, no markdown wrappers."
     )
 
+    _valid_cats = ", ".join(sorted(VISUAL_CATEGORIES.keys()))
+
     user_prompt = f"""Write a YouTube Shorts script (45–60 seconds) about mystery/space.
 
 CONTEXT:
@@ -289,6 +482,8 @@ CONTENT REQUIREMENTS:
 5. Include at least ONE specific measurement or comparison (e.g., "100 billion times heavier than our Sun").
 6. Final phrase — eerie cliffhanger or call to action.
 7. 10–14 parts total (for 45–60 second video).
+8. For each part, pick a "visual_hint" — the background video category that fits the phrase best.
+   Valid categories: {_valid_cats}
 
 Format — strictly JSON:
 {{
@@ -296,7 +491,7 @@ Format — strictly JSON:
   "description": "YouTube description (2–3 lines) with hashtags",
   "tags": ["space", "mystery", "shorts", ...4-7 more specific tags],
   "parts": [
-    {{ "text": "Phrase with specific terrifying fact, 12-25 words" }}
+    {{ "text": "Phrase with specific terrifying fact, 12-25 words", "visual_hint": "space" }}
   ]
 }}"""
 
@@ -319,7 +514,13 @@ Format — strictly JSON:
             raw = re.sub(r"\s*```$", "", raw.strip())
             data = json.loads(raw)
 
-            parts = [ScriptPart(p["text"]) for p in data.get("parts", []) if p.get("text")]
+            parts = [
+                ScriptPart(
+                    text=p["text"],
+                    visual_hint=p.get("visual_hint", "space"),
+                )
+                for p in data.get("parts", []) if p.get("text")
+            ]
             metadata = VideoMetadata(
                 title=data.get("title", "")[:100] or "Mystery of the Universe #Shorts",
                 description=data.get("description", "") or "#shorts #mystery #space",
@@ -354,7 +555,13 @@ Format — strictly JSON:
         raw2 = re.sub(r"^```(?:json)?\s*", "", raw2.strip())
         raw2 = re.sub(r"\s*```$", "", raw2.strip())
         data2 = json.loads(raw2)
-        parts2 = [ScriptPart(p["text"]) for p in data2.get("parts", []) if p.get("text")]
+        parts2 = [
+            ScriptPart(
+                text=p["text"],
+                visual_hint=p.get("visual_hint", "space"),
+            )
+            for p in data2.get("parts", []) if p.get("text")
+        ]
         metadata2 = VideoMetadata(
             title=data2.get("title", "")[:100] or "Mystery of the Universe #Shorts",
             description=data2.get("description", "") or "#shorts #mystery #space",
@@ -482,21 +689,48 @@ def _enrich_metadata(meta: VideoMetadata) -> VideoMetadata:
 
 # ── Clip downloads ──────────────────────────────────────────────────
 
-def download_pexels_clips(target_count: int = 14) -> List[Path]:
-    """Download clips from Pexels — 1 clip per query."""
+def download_pexels_clips(
+    parts: List[ScriptPart], target_count: int = 14,
+) -> dict:
+    """Download clips from Pexels matched to visual categories.
+
+    Returns dict mapping category -> list of clip Paths.
+    Also includes a "_pool" key with all clips for fallback.
+    """
     if not PEXELS_API_KEY:
-        return []
+        return {"_pool": []}
 
     headers = {"Authorization": PEXELS_API_KEY}
-    queries = list(PEXELS_QUERIES)
-    random.shuffle(queries)
-    queries = queries[:target_count]
-    result_paths: List[Path] = []
+
+    # Figure out which categories we need clips for
+    needed_cats: dict = {}
+    for part in parts:
+        cat = part.visual_hint if part.visual_hint in VISUAL_CATEGORIES else "space"
+        needed_cats[cat] = needed_cats.get(cat, 0) + 1
+
+    # Build query list: prioritize category queries, then fill with general pool
+    query_plan: list = []  # (query, category)
+    for cat, count in needed_cats.items():
+        cat_queries = list(VISUAL_CATEGORIES.get(cat, PEXELS_QUERIES[:5]))
+        random.shuffle(cat_queries)
+        for q in cat_queries[:count]:
+            query_plan.append((q, cat))
+
+    # Fill remainder from general pool
+    used_queries = {q for q, _ in query_plan}
+    general = [q for q in PEXELS_QUERIES if q not in used_queries]
+    random.shuffle(general)
+    for q in general:
+        if len(query_plan) >= target_count:
+            break
+        query_plan.append((q, "_general"))
+
+    result: dict = {"_pool": []}
     seen_ids: set = set()
     clip_idx = 0
 
-    for query in queries:
-        if len(result_paths) >= target_count:
+    for query, cat in query_plan:
+        if clip_idx >= target_count:
             break
         try:
             resp = requests.get(
@@ -522,14 +756,14 @@ def download_pexels_clips(target_count: int = 14) -> List[Path]:
             clip_path = CLIPS_DIR / f"pexels_{clip_idx}.mp4"
             try:
                 _download_file(best["link"], clip_path)
-                result_paths.append(clip_path)
-                print(f"    Pexels [{query}] -> clip {clip_idx}")
+                result.setdefault(cat, []).append(clip_path)
+                result["_pool"].append(clip_path)
+                print(f"    Pexels [{query}] ({cat}) -> clip {clip_idx}")
             except Exception as exc:
                 print(f"[WARN] Pexels clip {clip_idx} download failed: {exc}")
-            if len(result_paths) >= target_count:
-                break
+            break
 
-    return result_paths
+    return result
 
 
 def download_pixabay_clips(max_clips: int = 3) -> List[Path]:
@@ -715,13 +949,15 @@ def _apply_ken_burns(clip, duration: float):
 
 
 def _make_karaoke_subtitle(
-    word_timings: List[WordTiming], duration: float
+    word_timings: List[WordTiming], duration: float, is_hook: bool = False,
 ) -> list:
     """Karaoke-style subtitles: groups of 2-3 words appear in sync with speech.
 
     Each group appears when the first word is spoken and stays until the last
     word finishes. Current group is bright YELLOW, then fades to WHITE before
     the next group appears. Creates the classic "word pop" effect.
+
+    If is_hook=True, uses larger fontsize and red highlight for the first part.
     """
     if not word_timings:
         return []
@@ -746,15 +982,20 @@ def _make_karaoke_subtitle(
 
         full_text = " ".join(w.text for w in chunk)
 
-        # Yellow highlight while words are being spoken
+        # Hook styling: larger font + red for first part
+        active_color = "#FF4444" if is_hook else "yellow"
+        active_fontsize = 88 if is_hook else 72
+        fade_fontsize = 80 if is_hook else 72
+
+        # Active highlight while words are being spoken
         speak_end = chunk[-1].offset + chunk[-1].duration
         speak_dur = speak_end - chunk_start
         if speak_dur > 0:
             yellow_txt = (
                 TextClip(
                     full_text,
-                    fontsize=72,
-                    color="yellow",
+                    fontsize=active_fontsize,
+                    color=active_color,
                     font="DejaVu-Sans-Bold",
                     method="caption",
                     size=(TARGET_W - 100, None),
@@ -773,7 +1014,7 @@ def _make_karaoke_subtitle(
             white_txt = (
                 TextClip(
                     full_text,
-                    fontsize=72,
+                    fontsize=fade_fontsize,
                     color="white",
                     font="DejaVu-Sans-Bold",
                     method="caption",
@@ -794,13 +1035,15 @@ def _make_karaoke_subtitle(
 
 def build_video(
     parts: List[ScriptPart],
-    clip_paths: List[Path],
+    clip_map: dict,
+    pixabay_clips: List[Path],
     audio_parts: List[Path],
     music_path: Optional[Path],
     word_timings: List[List[WordTiming]],
 ) -> Path:
     """Assemble final video: per-part clips + karaoke subtitles + voice + music."""
-    if not clip_paths:
+    all_clips = clip_map.get("_pool", []) + pixabay_clips
+    if not all_clips:
         raise RuntimeError("No video clips available. Check PEXELS_API_KEY / PIXABAY_API_KEY.")
 
     # 1. Load per-part audio, get durations
@@ -809,14 +1052,19 @@ def build_video(
     total_duration = sum(durations)
     voice = concatenate_audioclips(part_audios)
 
-    # 2. Distribute clips across parts
-    if len(clip_paths) >= len(parts):
-        chosen_clips = random.sample(clip_paths, len(parts))
-    else:
-        chosen_clips = clip_paths[:]
-        random.shuffle(chosen_clips)
-        while len(chosen_clips) < len(parts):
-            chosen_clips.append(random.choice(clip_paths))
+    # 2. Assign clips per part — prefer matching visual category
+    chosen_clips: List[Path] = []
+    used_clips: set = set()
+    for part in parts:
+        cat = part.visual_hint if part.visual_hint in VISUAL_CATEGORIES else "space"
+        candidates = [c for c in clip_map.get(cat, []) if c not in used_clips]
+        if not candidates:
+            candidates = [c for c in all_clips if c not in used_clips]
+        if not candidates:
+            candidates = all_clips  # reuse if exhausted
+        pick = random.choice(candidates)
+        chosen_clips.append(pick)
+        used_clips.add(pick)
 
     # 3. Per-part: trim clip to audio duration, ken burns, karaoke subtitle
     source_clips = []
@@ -831,7 +1079,7 @@ def build_video(
 
         # Karaoke subtitles synced to word timing
         timings = word_timings[i] if i < len(word_timings) else []
-        subtitle_layers = _make_karaoke_subtitle(timings, dur)
+        subtitle_layers = _make_karaoke_subtitle(timings, dur, is_hook=(i == 0))
 
         composed = CompositeVideoClip(
             [fitted] + subtitle_layers,
@@ -888,9 +1136,10 @@ def main() -> None:
     print(f"  Parts: {len(parts)}")
 
     print("[2/5] Downloading video clips...")
-    clip_paths = download_pexels_clips()
-    clip_paths += download_pixabay_clips()
-    print(f"  Downloaded {len(clip_paths)} clips")
+    clip_map = download_pexels_clips(parts)
+    pixabay_clips = download_pixabay_clips()
+    total_clips = len(clip_map.get("_pool", [])) + len(pixabay_clips)
+    print(f"  Downloaded {total_clips} clips")
 
     print("[3/5] Generating TTS audio (per-part with word timings)...")
     audio_parts, word_timings = build_tts_per_part(parts)
@@ -899,7 +1148,7 @@ def main() -> None:
     music_path = download_background_music()
 
     print("[5/5] Building final video...")
-    output = build_video(parts, clip_paths, audio_parts, music_path, word_timings)
+    output = build_video(parts, clip_map, pixabay_clips, audio_parts, music_path, word_timings)
     print(f"  Video: {output}")
 
     upload_to_youtube(

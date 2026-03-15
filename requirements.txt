@@ -1,0 +1,10 @@
+groq
+pexels-api
+edge-tts
+moviepy==1.0.3
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+requests
+Pillow>=9.5.0,<12.0
+numpy>=1.24,<2.0

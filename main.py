@@ -212,6 +212,48 @@ def _pexels_best_file(video_files: list) -> dict | None:
     return None
 
 
+def _validate_script(parts: List[ScriptPart]) -> bool:
+    """Quality gate — rejects weak/generic scripts."""
+    if len(parts) < 8:
+        print(f"[QUALITY] Rejected: too few parts ({len(parts)}, need >=8)")
+        return False
+
+    avg_words = sum(len(p.text.split()) for p in parts) / len(parts)
+    if avg_words < 8:
+        print(f"[QUALITY] Rejected: avg words too low ({avg_words:.1f}, need >=8)")
+        return False
+
+    filler_count = 0
+    for part in parts:
+        text_lower = part.text.lower()
+        for filler in _FILLER_PATTERNS:
+            if filler in text_lower:
+                filler_count += 1
+                break
+    if filler_count > 2:
+        print(f"[QUALITY] Rejected: too many fillers ({filler_count})")
+        return False
+
+    # At least 40% of phrases must contain specific content
+    concrete = re.compile(
+        r'\d|light.?year|billion|million|trillion|kilometer|mile|'
+        r'degree|megahertz|frequency|nasa|voyager|hubble|'
+        r'ocean|trench|depth|signal|radiation|gravity|orbit|'
+        r'century|ancient|civilization|species|temperature|'
+        r'scientist|researcher|telescope|satellite|galaxy|'
+        r'neutron|magnetic|solar|lunar|crater|extinction',
+        re.IGNORECASE,
+    )
+    concrete_count = sum(1 for p in parts if concrete.search(p.text))
+    ratio = concrete_count / len(parts)
+    if ratio < 0.4:
+        print(f"[QUALITY] Rejected: not enough concrete content ({ratio:.0%}, need >=40%)")
+        return False
+
+    print(f"[QUALITY] Passed: {len(parts)} parts, avg {avg_words:.1f} words, {ratio:.0%} concrete")
+    return True
+
+
 # ── LLM — multi-part script ────────────────────────────────────────
 
 def call_groq_for_script() -> tuple:
@@ -278,50 +320,151 @@ Format — strictly JSON:
             data = json.loads(raw)
 
             parts = [ScriptPart(p["text"]) for p in data.get("parts", []) if p.get("text")]
-            if len(parts) < 6:
-                print(f"[WARN] Only {len(parts)} parts (attempt {attempt + 1})")
-                body["temperature"] = 1.0
-                continue
-
             metadata = VideoMetadata(
                 title=data.get("title", "")[:100] or "Mystery of the Universe #Shorts",
                 description=data.get("description", "") or "#shorts #mystery #space",
                 tags=data.get("tags", ["space", "mystery", "shorts"]),
             )
             metadata = _enrich_metadata(metadata)
-            return parts, metadata
+
+            if _validate_script(parts):
+                return parts, metadata
+            print(f"[WARN] Script failed quality check (attempt {attempt + 1})")
 
         except Exception as exc:
             print(f"[WARN] Groq error (attempt {attempt + 1}): {exc}")
-            body["temperature"] = 1.0
 
-    # Fallback — hardcoded script so the run never crashes
+        body["temperature"] = 1.0
+
+    # ── Retry with reinforced prompt ──
+    body["messages"].append({
+        "role": "user",
+        "content": (
+            "IMPORTANT: the previous response failed quality checks. "
+            "Make sure:\n"
+            "1. At least 10 parts, each 12-25 words.\n"
+            "2. Every part has SPECIFIC content: real names, dates, numbers, distances, measurements.\n"
+            "3. NO filler phrases like 'You won't believe' or 'This is amazing'.\n"
+            "Return JSON in the same format."
+        ),
+    })
+    try:
+        chat2 = client.chat.completions.create(**body)
+        raw2 = chat2.choices[0].message.content
+        raw2 = re.sub(r"^```(?:json)?\s*", "", raw2.strip())
+        raw2 = re.sub(r"\s*```$", "", raw2.strip())
+        data2 = json.loads(raw2)
+        parts2 = [ScriptPart(p["text"]) for p in data2.get("parts", []) if p.get("text")]
+        metadata2 = VideoMetadata(
+            title=data2.get("title", "")[:100] or "Mystery of the Universe #Shorts",
+            description=data2.get("description", "") or "#shorts #mystery #space",
+            tags=data2.get("tags", ["space", "mystery", "shorts"]),
+        )
+        metadata2 = _enrich_metadata(metadata2)
+        if _validate_script(parts2):
+            return parts2, metadata2
+        print("[WARN] Reinforced retry also failed, using fallback")
+    except Exception as exc:
+        print(f"[WARN] Reinforced retry error: {exc}, using fallback")
+
     return _fallback_script()
 
 
 def _fallback_script() -> tuple:
-    parts = [
-        ScriptPart("In 1977, a radio telescope in Ohio received a signal from deep space that lasted exactly 72 seconds."),
-        ScriptPart("Astronomer Jerry Ehman circled the data and wrote 'Wow!' in the margin. That signal has never been explained."),
-        ScriptPart("It came from the direction of the constellation Sagittarius, 120 light years away."),
-        ScriptPart("The signal was 30 times stronger than normal background radiation from space."),
-        ScriptPart("Scientists checked every possible natural source — comets, satellites, reflections. Nothing matched."),
-        ScriptPart("The frequency was 1420 megahertz — the exact frequency hydrogen atoms emit naturally."),
-        ScriptPart("This is the frequency scientists predicted an intelligent civilization would use to communicate."),
-        ScriptPart("Despite monitoring that exact spot in space for over 40 years, the signal has never repeated."),
-        ScriptPart("Some researchers believe it was a one-time transmission from an alien civilization that has since gone silent."),
-        ScriptPart("We may have received humanity's first message from another world and didn't even realize it in time."),
-    ]
-    metadata = VideoMetadata(
-        title="📡 The WOW Signal Still Can't Be Explained #Shorts",
-        description=(
-            "In 1977, we received a message from space that lasted 72 seconds. "
-            "It has never been explained. 📡\n"
-            "#shorts #space #mystery #wowsignal #aliens #science"
+    """4 hardcoded scripts for variety when LLM fails."""
+    _POOL = [
+        # 1 — The Wow Signal
+        (
+            [
+                ScriptPart("In 1977, a radio telescope in Ohio received a signal from deep space that lasted exactly 72 seconds."),
+                ScriptPart("Astronomer Jerry Ehman circled the data and wrote 'Wow!' in the margin. That signal has never been explained."),
+                ScriptPart("It came from the direction of the constellation Sagittarius, 120 light years away."),
+                ScriptPart("The signal was 30 times stronger than normal background radiation from space."),
+                ScriptPart("Scientists checked every possible natural source — comets, satellites, reflections. Nothing matched."),
+                ScriptPart("The frequency was 1420 megahertz — the exact frequency hydrogen atoms emit naturally."),
+                ScriptPart("This is the frequency scientists predicted an intelligent civilization would use to communicate."),
+                ScriptPart("Despite monitoring that exact spot in space for over 40 years, the signal has never repeated."),
+                ScriptPart("Some researchers believe it was a one-time transmission from an alien civilization that has since gone silent."),
+                ScriptPart("We may have received humanity's first message from another world and didn't even realize it in time."),
+            ],
+            VideoMetadata(
+                title="📡 The WOW Signal Still Can't Be Explained #Shorts",
+                description="In 1977, we received a message from space that lasted 72 seconds. It has never been explained. 📡",
+                tags=["space", "mystery", "wow signal", "aliens", "shorts", "science"],
+            ),
         ),
-        tags=["space", "mystery", "wow signal", "aliens", "shorts", "science", "universe"],
-    )
-    return parts, metadata
+        # 2 — The Bootes Void
+        (
+            [
+                ScriptPart("There is a region of space 330 million light years across that contains almost nothing."),
+                ScriptPart("It's called the Bootes Void, and it should contain about 2,000 galaxies. It has only 60."),
+                ScriptPart("That's 97 percent emptier than any other region of comparable size in the observable universe."),
+                ScriptPart("If our Milky Way were at the center of the Bootes Void, we wouldn't have known other galaxies existed until the 1960s."),
+                ScriptPart("Scientists have no accepted explanation for why this void is so impossibly empty."),
+                ScriptPart("Some physicists suggest it could be evidence of a Type III civilization that consumed all available matter."),
+                ScriptPart("Others believe it formed from the merging of smaller voids over 10 billion years."),
+                ScriptPart("The void is expanding faster than the surrounding universe, and nobody knows why."),
+                ScriptPart("If you traveled at the speed of light, it would take 330 million years just to cross it."),
+                ScriptPart("The Bootes Void is the loneliest place in the known universe, and it's getting lonelier."),
+            ],
+            VideoMetadata(
+                title="🕳️ The Emptiest Place in Space Is Terrifying #Shorts",
+                description="The Bootes Void is 330 million light years of almost nothing. Scientists can't explain it. 🕳️",
+                tags=["space", "bootes void", "mystery", "cosmos", "shorts", "science"],
+            ),
+        ),
+        # 3 — The Mariana Trench
+        (
+            [
+                ScriptPart("The deepest point on Earth is 36,000 feet below the ocean surface. It's called Challenger Deep."),
+                ScriptPart("The water pressure there is 1,000 times what you feel on the surface. It would crush a human instantly."),
+                ScriptPart("Only three manned expeditions have ever reached the bottom. We've sent more people to the Moon."),
+                ScriptPart("In 2019, explorer Victor Vescovo found a plastic bag at the bottom. Pollution reaches everywhere."),
+                ScriptPart("Scientists discovered life forms at the bottom that survive without sunlight, feeding on chemicals from the Earth's crust."),
+                ScriptPart("Temperatures near hydrothermal vents exceed 700 degrees Fahrenheit, yet organisms thrive there."),
+                ScriptPart("Over 80 percent of the ocean floor remains completely unmapped and unexplored."),
+                ScriptPart("Sonar readings have detected massive unknown shapes moving in the deep that don't match any known species."),
+                ScriptPart("The Mariana Trench is growing wider by about 2.5 centimeters every year as tectonic plates shift."),
+                ScriptPart("We know more about the surface of Mars than we do about our own ocean floor."),
+            ],
+            VideoMetadata(
+                title="🌊 36,000 Feet Deep — What Lives Down There? #Shorts",
+                description="The Mariana Trench is the deepest place on Earth. What we found there is terrifying. 🌊",
+                tags=["ocean", "mariana trench", "deep sea", "mystery", "shorts", "science"],
+            ),
+        ),
+        # 4 — Oumuamua
+        (
+            [
+                ScriptPart("In October 2017, astronomers detected the first known interstellar object passing through our solar system."),
+                ScriptPart("They named it Oumuamua, meaning 'scout' in Hawaiian. It was shaped like nothing ever seen before."),
+                ScriptPart("It was 10 times longer than it was wide — like a 400-meter cigar tumbling through space."),
+                ScriptPart("Oumuamua accelerated as it left our solar system, which cannot be explained by gravity alone."),
+                ScriptPart("Harvard astronomer Avi Loeb proposed it could be an alien solar sail or probe."),
+                ScriptPart("The object didn't produce a visible comet tail, ruling out standard outgassing explanations."),
+                ScriptPart("It entered our solar system from the direction of the star Vega, traveling at 196,000 miles per hour."),
+                ScriptPart("By the time we detected it, Oumuamua was already heading away. We had weeks to study it."),
+                ScriptPart("No telescope on Earth or in space has been able to determine what it was made of."),
+                ScriptPart("Oumuamua is now beyond our reach, speeding into interstellar space. We may never know what it truly was."),
+            ],
+            VideoMetadata(
+                title="🛸 The Alien Object That Flew Through Our Solar System #Shorts",
+                description="In 2017, something entered our solar system from interstellar space. Scientists still can't explain it. 🛸",
+                tags=["oumuamua", "aliens", "space", "interstellar", "mystery", "shorts", "science"],
+            ),
+        ),
+    ]
+    idx = random.randrange(len(_POOL))
+    parts, meta = _POOL[idx]
+    meta = _enrich_metadata(meta)
+    print(f"[FALLBACK] Using fallback script #{idx + 1}")
+    return parts, meta
+
+
+_DESCRIPTION_FOOTER = (
+    "\n\n#shorts #mystery #space #science #facts #universe"
+    "\nSubscribe to Void Chronicles AI for daily mind-blowing facts!"
+)
 
 
 def _enrich_metadata(meta: VideoMetadata) -> VideoMetadata:
@@ -332,8 +475,8 @@ def _enrich_metadata(meta: VideoMetadata) -> VideoMetadata:
     existing = {t.lower().strip() for t in meta.tags}
     for tag in core_tags - existing:
         meta.tags.append(tag)
-    if "#shorts" not in meta.description.lower():
-        meta.description += "\n#shorts #mystery #space #science"
+    if "#mystery" not in meta.description.lower():
+        meta.description += _DESCRIPTION_FOOTER
     return meta
 
 

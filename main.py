@@ -51,6 +51,8 @@ BUILD_DIR = Path("build")
 CLIPS_DIR = BUILD_DIR / "clips"
 AUDIO_DIR = BUILD_DIR / "audio_parts"
 MUSIC_PATH = BUILD_DIR / "music.mp3"
+HISTORY_PATH = Path("topic_history.json")
+MAX_HISTORY = 12  # remember last N topics to avoid repeats
 
 TTS_VOICES = [
     "en-US-ChristopherNeural",
@@ -163,6 +165,34 @@ def _clean_build() -> None:
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _load_topic_history() -> list:
+    if HISTORY_PATH.is_file():
+        try:
+            return json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return []
+
+
+def _save_topic_history(history: list) -> None:
+    HISTORY_PATH.write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
+
+
+def _pick_unique_topic() -> str:
+    """Pick a topic not used in last MAX_HISTORY runs."""
+    history = _load_topic_history()
+    available = [t for t in TOPICS if t not in history]
+    if not available:
+        history = []
+        available = list(TOPICS)
+    topic = random.choice(available)
+    history.append(topic)
+    if len(history) > MAX_HISTORY:
+        history = history[-MAX_HISTORY:]
+    _save_topic_history(history)
+    return topic
+
+
 def _download_file(url: str, dest: Path) -> None:
     r = requests.get(url, stream=True, timeout=120)
     r.raise_for_status()
@@ -189,8 +219,9 @@ def call_groq_for_script() -> tuple:
     from groq import Groq
 
     client = Groq(api_key=GROQ_API_KEY)
-    topic = random.choice(TOPICS)
+    topic = _pick_unique_topic()
     angle = random.choice(ANGLES)
+    print(f"  Topic: {topic} | Angle: {angle}")
 
     system_prompt = (
         "You are an expert scriptwriter for a viral YouTube Shorts channel called "
@@ -257,9 +288,7 @@ Format — strictly JSON:
                 description=data.get("description", "") or "#shorts #mystery #space",
                 tags=data.get("tags", ["space", "mystery", "shorts"]),
             )
-            # Ensure #Shorts in title
-            if "#shorts" not in metadata.title.lower():
-                metadata.title = metadata.title[:90] + " #Shorts"
+            metadata = _enrich_metadata(metadata)
             return parts, metadata
 
         except Exception as exc:
@@ -293,6 +322,19 @@ def _fallback_script() -> tuple:
         tags=["space", "mystery", "wow signal", "aliens", "shorts", "science", "universe"],
     )
     return parts, metadata
+
+
+def _enrich_metadata(meta: VideoMetadata) -> VideoMetadata:
+    """Ensure SEO essentials are present."""
+    if "#shorts" not in meta.title.lower():
+        meta.title = meta.title[:90] + " #Shorts"
+    core_tags = {"shorts", "mystery", "space", "science", "facts"}
+    existing = {t.lower().strip() for t in meta.tags}
+    for tag in core_tags - existing:
+        meta.tags.append(tag)
+    if "#shorts" not in meta.description.lower():
+        meta.description += "\n#shorts #mystery #space #science"
+    return meta
 
 
 # ── Clip downloads ──────────────────────────────────────────────────
@@ -532,93 +574,75 @@ def _apply_ken_burns(clip, duration: float):
 def _make_karaoke_subtitle(
     word_timings: List[WordTiming], duration: float
 ) -> list:
-    """Karaoke-style subtitles: words highlight yellow as they are spoken.
+    """Karaoke-style subtitles: groups of 2-3 words appear in sync with speech.
 
-    Shows 3-5 words at a time. Current word is YELLOW, spoken words are WHITE,
-    upcoming words are dim gray. Creates the "word-by-word glow" effect.
+    Each group appears when the first word is spoken and stays until the last
+    word finishes. Current group is bright YELLOW, then fades to WHITE before
+    the next group appears. Creates the classic "word pop" effect.
     """
     if not word_timings:
         return []
 
-    # Group words into chunks of 3-4 for readability
-    CHUNK_SIZE = 4
+    # Group words into chunks of 2-3 for "pop" effect
+    CHUNK_SIZE = 3
     chunks = []
     for i in range(0, len(word_timings), CHUNK_SIZE):
         chunks.append(word_timings[i:i + CHUNK_SIZE])
 
     layers = []
-    for chunk in chunks:
+    for ci, chunk in enumerate(chunks):
         chunk_start = chunk[0].offset
-        chunk_end = chunk[-1].offset + chunk[-1].duration + 0.1
-        chunk_end = min(chunk_end, duration)
+        # End = next chunk start, or end of last word + 0.2s
+        if ci + 1 < len(chunks):
+            chunk_end = chunks[ci + 1][0].offset
+        else:
+            chunk_end = min(chunk[-1].offset + chunk[-1].duration + 0.3, duration)
         chunk_dur = chunk_end - chunk_start
         if chunk_dur <= 0:
             continue
 
-        # Full chunk text as dim background (upcoming words)
         full_text = " ".join(w.text for w in chunk)
-        bg_txt = (
-            TextClip(
-                full_text,
-                fontsize=72,
-                color="#888888",
-                font="DejaVu-Sans-Bold",
-                method="caption",
-                size=(TARGET_W - 80, None),
-                stroke_color="black",
-                stroke_width=4,
-            )
-            .set_position(("center", 0.75), relative=True)
-            .set_start(chunk_start)
-            .set_duration(chunk_dur)
-        )
-        layers.append(bg_txt)
 
-        # Each word highlights yellow when spoken
-        for w in chunk:
-            w_start = w.offset
-            w_end = min(w.offset + w.duration + 0.15, chunk_end)
-            w_dur = w_end - w_start
-            if w_dur <= 0:
-                continue
-
-            highlight = (
+        # Yellow highlight while words are being spoken
+        speak_end = chunk[-1].offset + chunk[-1].duration
+        speak_dur = speak_end - chunk_start
+        if speak_dur > 0:
+            yellow_txt = (
                 TextClip(
-                    w.text,
-                    fontsize=78,
+                    full_text,
+                    fontsize=72,
                     color="yellow",
                     font="DejaVu-Sans-Bold",
                     method="caption",
-                    size=(TARGET_W - 80, None),
+                    size=(TARGET_W - 100, None),
                     stroke_color="black",
-                    stroke_width=3,
+                    stroke_width=4,
                 )
-                .set_position(("center", 0.73), relative=True)
-                .set_start(w_start)
-                .set_duration(w_dur)
+                .set_position(("center", 0.75), relative=True)
+                .set_start(chunk_start)
+                .set_duration(min(speak_dur, chunk_dur))
             )
-            layers.append(highlight)
+            layers.append(yellow_txt)
 
-        # After all words spoken: show full chunk in white
-        last_word_end = chunk[-1].offset + chunk[-1].duration
-        remaining = chunk_end - last_word_end
+        # White after spoken (brief pause before next group)
+        remaining = chunk_end - speak_end
         if remaining > 0.05:
-            done_txt = (
+            white_txt = (
                 TextClip(
                     full_text,
                     fontsize=72,
                     color="white",
                     font="DejaVu-Sans-Bold",
                     method="caption",
-                    size=(TARGET_W - 80, None),
+                    size=(TARGET_W - 100, None),
                     stroke_color="black",
                     stroke_width=3,
                 )
                 .set_position(("center", 0.75), relative=True)
-                .set_start(last_word_end)
+                .set_start(speak_end)
                 .set_duration(remaining)
             )
-            layers.append(done_txt)
+            layers.append(white_txt)
 
     return layers
 

@@ -54,11 +54,6 @@ jobs:
           YOUTUBE_PRIVACY: ${{ secrets.YOUTUBE_PRIVACY }}
         run: python main.py
 
-      - name: Upload artifact
+      - name: Cleanup build files
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mystery-short-${{ github.run_number }}
-          path: build/out.mp4
-          retention-days: 1
-          if-no-files-found: warn
+        run: rm -rf build/

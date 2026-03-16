@@ -244,7 +244,11 @@ FORMAT (strict JSON):
     try:
         content = re.sub(r"^```(?:json)?\s*", "", content.strip())
         content = re.sub(r"\s*```$", "", content.strip())
-        data = json.loads(content)
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            content = re.sub(r'[\x00-\x1f\x7f]', lambda m: f'\\u{ord(m.group()):04x}', content)
+            data = json.loads(content)
         wc = len(data.get("script", "").split())
         print(f"[SCRIPT] {wc} words, {fact_count} sections, topic: {topic}")
         if wc < 500:

@@ -1004,42 +1004,48 @@ def _make_karaoke_subtitle(
         speak_end = chunk[-1].offset + chunk[-1].duration
         speak_dur = speak_end - chunk_start
         if speak_dur > 0:
-            yellow_txt = (
-                TextClip(
-                    full_text,
-                    fontsize=active_fontsize,
-                    color=active_color,
-                    font="DejaVu-Sans-Bold",
-                    method="caption",
-                    size=(TARGET_W - 100, None),
-                    stroke_color="black",
-                    stroke_width=4,
+            try:
+                yellow_txt = (
+                    TextClip(
+                        full_text,
+                        fontsize=active_fontsize,
+                        color=active_color,
+                        font="DejaVu-Sans-Bold",
+                        method="caption",
+                        size=(TARGET_W - 100, None),
+                        stroke_color="black",
+                        stroke_width=4,
+                    )
+                    .set_position(("center", 0.75), relative=True)
+                    .set_start(chunk_start)
+                    .set_duration(min(speak_dur, chunk_dur))
                 )
-                .set_position(("center", 0.75), relative=True)
-                .set_start(chunk_start)
-                .set_duration(min(speak_dur, chunk_dur))
-            )
-            layers.append(yellow_txt)
+                layers.append(yellow_txt)
+            except Exception as exc:
+                print(f"[WARN] Karaoke TextClip failed: {exc}")
 
         # White after spoken (brief pause before next group)
         remaining = chunk_end - speak_end
         if remaining > 0.05:
-            white_txt = (
-                TextClip(
-                    full_text,
-                    fontsize=fade_fontsize,
-                    color="white",
-                    font="DejaVu-Sans-Bold",
-                    method="caption",
-                    size=(TARGET_W - 100, None),
-                    stroke_color="black",
-                    stroke_width=3,
+            try:
+                white_txt = (
+                    TextClip(
+                        full_text,
+                        fontsize=fade_fontsize,
+                        color="white",
+                        font="DejaVu-Sans-Bold",
+                        method="caption",
+                        size=(TARGET_W - 100, None),
+                        stroke_color="black",
+                        stroke_width=3,
+                    )
+                    .set_position(("center", 0.75), relative=True)
+                    .set_start(speak_end)
+                    .set_duration(remaining)
                 )
-                .set_position(("center", 0.75), relative=True)
-                .set_start(speak_end)
-                .set_duration(remaining)
-            )
-            layers.append(white_txt)
+                layers.append(white_txt)
+            except Exception:
+                pass
 
     return layers
 
@@ -1093,6 +1099,7 @@ def build_video(
         # Karaoke subtitles synced to word timing
         timings = word_timings[i] if i < len(word_timings) else []
         subtitle_layers = _make_karaoke_subtitle(timings, dur, is_hook=(i == 0))
+        print(f"    Part {i}: {len(timings)} word timings → {len(subtitle_layers)} subtitle layers")
 
         composed = CompositeVideoClip(
             [fitted] + subtitle_layers,

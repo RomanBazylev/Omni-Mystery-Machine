@@ -41,6 +41,8 @@ jobs:
           sudo sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@*"/' /etc/ImageMagick-6/policy.xml || true
 
       - name: Install Dependencies
+        env:
+          IMAGEIO_FFMPEG_EXE: /usr/bin/ffmpeg
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt

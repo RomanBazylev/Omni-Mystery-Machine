@@ -1,5 +1,8 @@
 import os
+import time
+
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 
@@ -39,12 +42,24 @@ def upload_to_youtube(file_path, title, description, tags):
         "status": {"privacyStatus": privacy, "selfDeclaredMadeForKids": False},
     }
 
-    media = MediaFileUpload(file_path, chunksize=-1, resumable=True)
-    request = youtube.videos().insert(
-        part="snippet,status", body=body, media_body=media
-    )
-
-    response = request.execute()
-    video_id = response["id"]
-    print(f"Uploaded! https://youtube.com/shorts/{video_id}")
-    return video_id
+    for attempt in range(1, 4):
+        try:
+            media = MediaFileUpload(file_path, chunksize=-1, resumable=True)
+            request = youtube.videos().insert(
+                part="snippet,status", body=body, media_body=media
+            )
+            response = request.execute()
+            video_id = response["id"]
+            print(f"Uploaded! https://youtube.com/shorts/{video_id}")
+            return video_id
+        except HttpError as exc:
+            if exc.resp.status < 500:
+                raise
+            print(f"[WARN] Upload attempt {attempt}/3: HTTP {exc.resp.status}")
+            if attempt < 3:
+                time.sleep(attempt * 15)
+        except Exception as exc:
+            print(f"[WARN] Upload attempt {attempt}/3: {exc}")
+            if attempt < 3:
+                time.sleep(attempt * 15)
+    raise RuntimeError("Upload failed after 3 attempts")

@@ -3,4 +3,7 @@ build/
 *.mp4
 *.mp3
 *.json
+!performance_log.json
+!topic_history.json
+!topic_history_long.json
 .env

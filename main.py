@@ -865,7 +865,7 @@ async def _generate_part_audio(
     text: str, voice: str, rate: str, out_path: Path
 ) -> List[WordTiming]:
     """Generate TTS audio and capture per-word timestamps."""
-    comm = edge_tts.Communicate(text, voice, rate=rate)
+    comm = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
     word_timings: List[WordTiming] = []
     audio_chunks = bytearray()
 
@@ -885,14 +885,7 @@ async def _generate_part_audio(
                 ))
 
     if not word_timings:
-        print(f"[WARN] No word timings captured for: {text[:60]}...")
-        # Dump first non-audio chunk keys for debugging
-        comm2 = edge_tts.Communicate(text, voice, rate=rate)
-        async for chunk in comm2.stream():
-            ctype = chunk.get("type") or chunk.get("Type", "")
-            if ctype != "audio":
-                print(f"[DEBUG] Non-audio chunk keys: {list(chunk.keys())}, type={ctype}")
-                break
+        print(f"[WARN] No word timings for: {text[:60]}...")
 
     with out_path.open("wb") as f:
         f.write(audio_chunks)

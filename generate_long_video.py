@@ -211,7 +211,7 @@ def generate_deep_dive_script(topic: str) -> Optional[dict]:
             "- Use vivid comparisons: 'If you compressed Earth to the size of a marble...'\n"
             "- NO generic filler: 'you won't believe', 'this is amazing', 'trust me'.\n"
             "- Build gradually from known to mind-blowing.\n"
-            "- ONLY valid JSON, no markdown.\n"
+            "- Respond with ONLY a JSON object. No markdown, no commentary.\n"
         )},
         {"role": "user", "content": f"""Write a deep-dive YouTube video script: "{topic}"
 
@@ -229,33 +229,24 @@ STRUCTURE:
 4. IMPLICATIONS (3-4 sentences): What does this mean for humanity? What questions remain?
 5. OUTRO (2-3 sentences): Wrap up with the biggest takeaway. Subscribe CTA.
 
-FORMAT (strict JSON):
-{{
-  "title": "Engaging title, max 90 chars, with emoji 🌌",
-  "description": "5-8 line description with hashtags",
-  "tags": ["space", "mystery", "science", ...15 more tags],
-  "pexels_queries": ["6-8 English queries for cinematic background footage"],
-  "script": "Full narration. Each sentence on its own line."
-}}"""},
+Return a JSON object with these exact keys:
+- "title": string, engaging title max 90 chars with emoji
+- "description": string, 5-8 lines with hashtags
+- "tags": array of 15-20 strings
+- "pexels_queries": array of 6-8 English search queries for footage
+- "script": ONE STRING with the full narration, sentences separated by newlines. NOT an array."""},
     ]
 
     content = _groq_call(messages, temperature=0.85, max_tokens=8192)
     if not content:
         return None
     try:
-        content = re.sub(r"^```(?:json)?\s*", "", content.strip())
-        content = re.sub(r"\s*```$", "", content.strip())
-        # Extract JSON object if LLM wrapped it in prose
-        brace_start = content.find("{")
-        brace_end = content.rfind("}")
-        if brace_start >= 0 and brace_end > brace_start:
-            content = content[brace_start:brace_end + 1]
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError:
-            content = re.sub(r'[\x00-\x1f\x7f]', lambda m: f'\\u{ord(m.group()):04x}', content)
-            data = json.loads(content)
-        wc = len(data.get("script", "").split())
+        data = json.loads(content)
+        script = data.get("script", "")
+        if isinstance(script, list):
+            script = "\n".join(str(s) for s in script)
+            data["script"] = script
+        wc = len(script.split())
         print(f"[SCRIPT] {wc} words, {fact_count} sections, topic: {topic}")
         if wc < 500:
             return None
@@ -560,6 +551,8 @@ def main():
         sys.exit(1)
 
     script_text = script_data["script"]
+    if isinstance(script_text, list):
+        script_text = "\n".join(str(s) for s in script_text)
     meta = {
         "title": script_data.get("title", topic)[:100],
         "description": script_data.get("description", "") + _DESCRIPTION_FOOTER,

@@ -2,7 +2,7 @@ name: Generate Long-Form Deep Dive
 
 on:
   schedule:
-    - cron: "0 9 * * 3,6"  # Wednesday & Saturday at 09:00 UTC
+    - cron: "0 9 * * *"  # Daily at 09:00 UTC
   workflow_dispatch:
     inputs:
       privacy_status:

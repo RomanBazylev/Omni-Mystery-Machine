@@ -41,6 +41,7 @@ class VideoMetadata:
     title: str
     description: str
     tags: List[str]
+    topic: str = ""
 
 
 # ── Config ─────────────────────────────────────────────────────────
@@ -370,13 +371,19 @@ def _save_topic_history(history: list) -> None:
 
 
 def _pick_unique_topic() -> str:
-    """Pick a topic not used in last MAX_HISTORY runs."""
+    """Pick a topic not used in last MAX_HISTORY runs, weighted by performance."""
+    from analytics import get_topic_weights
+
     history = _load_topic_history()
     available = [t for t in TOPICS if t not in history]
     if not available:
         history = []
         available = list(TOPICS)
-    topic = random.choice(available)
+    weights = get_topic_weights(available)
+    if weights:
+        topic = random.choices(available, weights=weights, k=1)[0]
+    else:
+        topic = random.choice(available)
     history.append(topic)
     if len(history) > MAX_HISTORY:
         history = history[-MAX_HISTORY:]
@@ -525,6 +532,7 @@ Format — strictly JSON:
                 title=data.get("title", "")[:100] or "Mystery of the Universe #Shorts",
                 description=data.get("description", "") or "#shorts #mystery #space",
                 tags=data.get("tags", ["space", "mystery", "shorts"]),
+                topic=topic,
             )
             metadata = _enrich_metadata(metadata)
 
@@ -566,6 +574,7 @@ Format — strictly JSON:
             title=data2.get("title", "")[:100] or "Mystery of the Universe #Shorts",
             description=data2.get("description", "") or "#shorts #mystery #space",
             tags=data2.get("tags", ["space", "mystery", "shorts"]),
+            topic=topic,
         )
         metadata2 = _enrich_metadata(metadata2)
         if _validate_script(parts2):
@@ -598,6 +607,7 @@ def _fallback_script() -> tuple:
                 title="📡 The WOW Signal Still Can't Be Explained #Shorts",
                 description="In 1977, we received a message from space that lasted 72 seconds. It has never been explained. 📡",
                 tags=["space", "mystery", "wow signal", "aliens", "shorts", "science"],
+                topic="the Wow Signal from 1977",
             ),
         ),
         # 2 — The Bootes Void
@@ -618,6 +628,7 @@ def _fallback_script() -> tuple:
                 title="🕳️ The Emptiest Place in Space Is Terrifying #Shorts",
                 description="The Bootes Void is 330 million light years of almost nothing. Scientists can't explain it. 🕳️",
                 tags=["space", "bootes void", "mystery", "cosmos", "shorts", "science"],
+                topic="the Bootes Void",
             ),
         ),
         # 3 — The Mariana Trench
@@ -638,6 +649,7 @@ def _fallback_script() -> tuple:
                 title="🌊 36,000 Feet Deep — What Lives Down There? #Shorts",
                 description="The Mariana Trench is the deepest place on Earth. What we found there is terrifying. 🌊",
                 tags=["ocean", "mariana trench", "deep sea", "mystery", "shorts", "science"],
+                topic="the Mariana Trench",
             ),
         ),
         # 4 — Oumuamua
@@ -658,6 +670,7 @@ def _fallback_script() -> tuple:
                 title="🛸 The Alien Object That Flew Through Our Solar System #Shorts",
                 description="In 2017, something entered our solar system from interstellar space. Scientists still can't explain it. 🛸",
                 tags=["oumuamua", "aliens", "space", "interstellar", "mystery", "shorts", "science"],
+                topic="Oumuamua interstellar object",
             ),
         ),
     ]
@@ -1151,12 +1164,14 @@ def main() -> None:
     output = build_video(parts, clip_map, pixabay_clips, audio_parts, music_path, word_timings)
     print(f"  Video: {output}")
 
-    upload_to_youtube(
+    video_id = upload_to_youtube(
         str(output),
         metadata.title,
         metadata.description,
         metadata.tags,
     )
+    from analytics import log_upload
+    log_upload(video_id, metadata.title, metadata.topic, metadata.tags)
     print("=== Done ===")
 
 

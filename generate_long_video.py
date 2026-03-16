@@ -198,7 +198,7 @@ def _pick_topic() -> str:
 
 
 # ── Script Generation ────────────────────────────────────────────────
-def generate_deep_dive_script(topic: str) -> Optional[dict]:
+def generate_deep_dive_script(topic: str, min_words: int = 500) -> Optional[dict]:
     fact_count = random.choice([5, 6, 7])
 
     messages = [
@@ -215,26 +215,34 @@ def generate_deep_dive_script(topic: str) -> Optional[dict]:
         )},
         {"role": "user", "content": f"""Write a deep-dive YouTube video script: "{topic}"
 
-This is an 8-12 minute video (~1500-2000 words total).
+This is an 8-12 minute video. The script MUST be 1500-2000 words long.
 
-STRUCTURE:
-1. HOOK (3-4 sentences): Start with the most mind-blowing fact about this topic. Make the viewer NEED to keep watching.
-2. CONTEXT (2-3 sentences): Brief background — why should anyone care about this?
+CRITICAL: The "script" field must contain AT LEAST 1500 words. This is a LONG video, not a short.
+If the script is under 1000 words, the video cannot be produced.
+
+STRUCTURE (write ALL of these sections in full):
+1. HOOK (3-4 sentences): Start with the most mind-blowing fact about this topic.
+2. CONTEXT (2-3 sentences): Brief background — why should anyone care?
 3. DEEP DIVE ({fact_count} sections, each 200-250 words):
-   - Each section reveals a fascinating aspect of the topic
-   - Include specific numbers: distances, temperatures, dates, weights, speeds
+   - Section 1: The basics that most people get wrong
+   - Section 2: The first surprising discovery
+   - Section 3: The hidden connection nobody talks about
+   - Section 4: The mind-blowing measurement or comparison
+   - Section 5: The implications that change everything
+   {"- Section 6: The latest breakthrough or mystery" if fact_count >= 6 else ""}
+   {"- Section 7: What scientists predict will happen next" if fact_count >= 7 else ""}
+   - Each section: include specific numbers, dates, names, distances
    - Use analogies to make abstract concepts tangible
-   - Build from "interesting" to "absolutely mind-blowing"
-   - Transition between sections: "But here's where it gets even stranger..."
-4. IMPLICATIONS (3-4 sentences): What does this mean for humanity? What questions remain?
-5. OUTRO (2-3 sentences): Wrap up with the biggest takeaway. Subscribe CTA.
+   - Transition between sections naturally
+4. IMPLICATIONS (3-4 sentences): What does this mean for humanity?
+5. OUTRO (2-3 sentences): Biggest takeaway + subscribe CTA.
 
 Return a JSON object with these exact keys:
 - "title": string, engaging title max 90 chars with emoji
 - "description": string, 5-8 lines with hashtags
 - "tags": array of 15-20 strings
 - "pexels_queries": array of 6-8 English search queries for footage
-- "script": ONE STRING with the full narration, sentences separated by newlines. NOT an array."""},
+- "script": ONE STRING with the full narration (1500-2000 words), sentences separated by newlines. NOT an array."""},
     ]
 
     content = _groq_call(messages, temperature=0.85, max_tokens=8192)
@@ -248,7 +256,7 @@ Return a JSON object with these exact keys:
             data["script"] = script
         wc = len(script.split())
         print(f"[SCRIPT] {wc} words, {fact_count} sections, topic: {topic}")
-        if wc < 500:
+        if wc < min_words:
             return None
         return data
     except Exception as exc:
@@ -541,11 +549,13 @@ def main():
     print(f"  Topic: {topic}")
 
     script_data = None
-    for attempt in range(3):
-        script_data = generate_deep_dive_script(topic)
+    # Progressive retry: first try needs 500 words, subsequent tries relax to 300
+    for attempt in range(4):
+        min_w = 500 if attempt < 2 else 300
+        script_data = generate_deep_dive_script(topic, min_words=min_w)
         if script_data:
             break
-        print(f"[RETRY] Attempt {attempt + 2}...")
+        print(f"[RETRY] Attempt {attempt + 2} (min_words={min_w})...")
     if not script_data:
         print("[ERROR] Failed to generate script")
         sys.exit(1)

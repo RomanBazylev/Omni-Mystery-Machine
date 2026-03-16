@@ -517,8 +517,6 @@ Format — strictly JSON:
         try:
             chat = client.chat.completions.create(**body)
             raw = chat.choices[0].message.content
-            raw = re.sub(r"^```(?:json)?\s*", "", raw.strip())
-            raw = re.sub(r"\s*```$", "", raw.strip())
             data = json.loads(raw)
 
             parts = [
@@ -560,8 +558,6 @@ Format — strictly JSON:
     try:
         chat2 = client.chat.completions.create(**body)
         raw2 = chat2.choices[0].message.content
-        raw2 = re.sub(r"^```(?:json)?\s*", "", raw2.strip())
-        raw2 = re.sub(r"\s*```$", "", raw2.strip())
         data2 = json.loads(raw2)
         parts2 = [
             ScriptPart(

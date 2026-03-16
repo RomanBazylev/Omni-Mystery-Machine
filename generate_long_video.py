@@ -154,7 +154,8 @@ def _groq_call(messages: list, temperature: float = 0.8, max_tokens: int = 8192)
     if not api_key:
         return None
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    body = {"model": GROQ_MODEL, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
+    body = {"model": GROQ_MODEL, "messages": messages, "temperature": temperature, "max_tokens": max_tokens,
+            "response_format": {"type": "json_object"}}
     for attempt in range(1, 3):
         try:
             r = requests.post(GROQ_URL, headers=headers, json=body, timeout=90)
@@ -244,6 +245,11 @@ FORMAT (strict JSON):
     try:
         content = re.sub(r"^```(?:json)?\s*", "", content.strip())
         content = re.sub(r"\s*```$", "", content.strip())
+        # Extract JSON object if LLM wrapped it in prose
+        brace_start = content.find("{")
+        brace_end = content.rfind("}")
+        if brace_start >= 0 and brace_end > brace_start:
+            content = content[brace_start:brace_end + 1]
         try:
             data = json.loads(content)
         except json.JSONDecodeError:

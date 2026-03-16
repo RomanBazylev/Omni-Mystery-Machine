@@ -38,7 +38,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg imagemagick fonts-dejavu-core fonts-dejavu-extra
-          sudo sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@*"/' /etc/ImageMagick-6/policy.xml || true
+          # Remove all restrictive ImageMagick policies so TextClip works
+          sudo sed -i '/<policy domain="coder"/d' /etc/ImageMagick-6/policy.xml || true
+          sudo sed -i '/<policy domain="path"/d' /etc/ImageMagick-6/policy.xml || true
 
       - name: Install Dependencies
         env:

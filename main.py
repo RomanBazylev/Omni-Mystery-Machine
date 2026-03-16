@@ -870,14 +870,29 @@ async def _generate_part_audio(
     audio_chunks = bytearray()
 
     async for chunk in comm.stream():
-        if chunk["type"] == "audio":
+        ctype = chunk.get("type") or chunk.get("Type", "")
+        if ctype == "audio":
             audio_chunks.extend(chunk["data"])
-        elif chunk["type"] == "WordBoundary":
-            word_timings.append(WordTiming(
-                text=chunk["text"],
-                offset=chunk["offset"] / 10_000_000,
-                duration=chunk["duration"] / 10_000_000,
-            ))
+        elif ctype == "WordBoundary":
+            w_text = chunk.get("text") or chunk.get("Text", "")
+            w_offset = chunk.get("offset") or chunk.get("Offset", 0)
+            w_duration = chunk.get("duration") or chunk.get("Duration", 0)
+            if w_text:
+                word_timings.append(WordTiming(
+                    text=w_text,
+                    offset=w_offset / 10_000_000,
+                    duration=w_duration / 10_000_000,
+                ))
+
+    if not word_timings:
+        print(f"[WARN] No word timings captured for: {text[:60]}...")
+        # Dump first non-audio chunk keys for debugging
+        comm2 = edge_tts.Communicate(text, voice, rate=rate)
+        async for chunk in comm2.stream():
+            ctype = chunk.get("type") or chunk.get("Type", "")
+            if ctype != "audio":
+                print(f"[DEBUG] Non-audio chunk keys: {list(chunk.keys())}, type={ctype}")
+                break
 
     with out_path.open("wb") as f:
         f.write(audio_chunks)

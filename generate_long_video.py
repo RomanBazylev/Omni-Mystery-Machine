@@ -479,8 +479,19 @@ def _get_access_token() -> str:
         "refresh_token": os.environ["YT_REFRESH_TOKEN"],
         "grant_type": "refresh_token",
     }, timeout=30)
-    resp.raise_for_status()
-    return resp.json()["access_token"]
+    data = resp.json()
+    if "error" in data:
+        err = data.get("error", "")
+        desc = data.get("error_description", "")
+        if err == "invalid_grant":
+            raise RuntimeError(
+                f"OAuth invalid_grant: {desc}. "
+                "The refresh token has expired or been revoked. "
+                "Re-run: python get_refresh_token.py  then update the "
+                "YT_REFRESH_TOKEN secret in GitHub repo settings."
+            )
+        raise RuntimeError(f"OAuth error: {err} — {desc}")
+    return data["access_token"]
 
 
 def upload_video(meta: dict) -> str:

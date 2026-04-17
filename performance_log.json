@@ -1104,10 +1104,10 @@
       ],
       "uploaded_at": "2026-04-16T13:35:21.669363+00:00",
       "stats": {
-        "views": 922,
+        "views": 926,
         "likes": 28,
         "comments": 0,
-        "fetched_at": "2026-04-17T05:59:41.430970+00:00"
+        "fetched_at": "2026-04-17T09:09:25.015184+00:00"
       }
     },
     {
@@ -1125,10 +1125,10 @@
       ],
       "uploaded_at": "2026-04-16T17:13:34.003543+00:00",
       "stats": {
-        "views": 624,
-        "likes": 25,
+        "views": 802,
+        "likes": 29,
         "comments": 2,
-        "fetched_at": "2026-04-17T05:59:41.430970+00:00"
+        "fetched_at": "2026-04-17T09:09:25.015184+00:00"
       }
     },
     {
@@ -1149,10 +1149,10 @@
       ],
       "uploaded_at": "2026-04-16T20:51:35.232994+00:00",
       "stats": {
-        "views": 303,
-        "likes": 20,
+        "views": 399,
+        "likes": 23,
         "comments": 0,
-        "fetched_at": "2026-04-17T05:59:41.430970+00:00"
+        "fetched_at": "2026-04-17T09:09:25.015184+00:00"
       }
     },
     {
@@ -1172,10 +1172,10 @@
       ],
       "uploaded_at": "2026-04-17T01:58:53.594713+00:00",
       "stats": {
-        "views": 909,
+        "views": 1046,
         "likes": 26,
         "comments": 0,
-        "fetched_at": "2026-04-17T05:59:41.430970+00:00"
+        "fetched_at": "2026-04-17T09:09:25.015184+00:00"
       }
     },
     {
@@ -1195,6 +1195,28 @@
         "science"
       ],
       "uploaded_at": "2026-04-17T06:08:37.490971+00:00",
+      "stats": {
+        "views": 684,
+        "likes": 34,
+        "comments": 0,
+        "fetched_at": "2026-04-17T09:09:25.015184+00:00"
+      }
+    },
+    {
+      "video_id": "yzauPrdC9b4",
+      "title": "🛸 The Alien Object That Flew Through Our Solar System #Shorts",
+      "topic": "Oumuamua interstellar object",
+      "tags": [
+        "oumuamua",
+        "aliens",
+        "space",
+        "interstellar",
+        "mystery",
+        "shorts",
+        "science",
+        "facts"
+      ],
+      "uploaded_at": "2026-04-17T09:17:15.773234+00:00",
       "stats": null
     }
   ]

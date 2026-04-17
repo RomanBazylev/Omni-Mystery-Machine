@@ -1104,10 +1104,10 @@
       ],
       "uploaded_at": "2026-04-16T13:35:21.669363+00:00",
       "stats": {
-        "views": 927,
+        "views": 926,
         "likes": 28,
         "comments": 0,
-        "fetched_at": "2026-04-17T12:59:23.781907+00:00"
+        "fetched_at": "2026-04-17T16:45:06.065029+00:00"
       }
     },
     {
@@ -1125,10 +1125,10 @@
       ],
       "uploaded_at": "2026-04-16T17:13:34.003543+00:00",
       "stats": {
-        "views": 909,
-        "likes": 30,
+        "views": 1015,
+        "likes": 32,
         "comments": 2,
-        "fetched_at": "2026-04-17T12:59:23.781907+00:00"
+        "fetched_at": "2026-04-17T16:45:06.065029+00:00"
       }
     },
     {
@@ -1149,10 +1149,10 @@
       ],
       "uploaded_at": "2026-04-16T20:51:35.232994+00:00",
       "stats": {
-        "views": 433,
-        "likes": 23,
+        "views": 472,
+        "likes": 26,
         "comments": 0,
-        "fetched_at": "2026-04-17T12:59:23.781907+00:00"
+        "fetched_at": "2026-04-17T16:45:06.065029+00:00"
       }
     },
     {
@@ -1172,10 +1172,10 @@
       ],
       "uploaded_at": "2026-04-17T01:58:53.594713+00:00",
       "stats": {
-        "views": 1047,
+        "views": 1049,
         "likes": 26,
         "comments": 0,
-        "fetched_at": "2026-04-17T12:59:23.781907+00:00"
+        "fetched_at": "2026-04-17T16:45:06.065029+00:00"
       }
     },
     {
@@ -1196,10 +1196,10 @@
       ],
       "uploaded_at": "2026-04-17T06:08:37.490971+00:00",
       "stats": {
-        "views": 819,
+        "views": 945,
         "likes": 35,
         "comments": 0,
-        "fetched_at": "2026-04-17T12:59:23.781907+00:00"
+        "fetched_at": "2026-04-17T16:45:06.065029+00:00"
       }
     },
     {
@@ -1218,10 +1218,10 @@
       ],
       "uploaded_at": "2026-04-17T09:17:15.773234+00:00",
       "stats": {
-        "views": 612,
-        "likes": 56,
-        "comments": 5,
-        "fetched_at": "2026-04-17T12:59:23.781907+00:00"
+        "views": 1010,
+        "likes": 61,
+        "comments": 7,
+        "fetched_at": "2026-04-17T16:45:06.065029+00:00"
       }
     },
     {
@@ -1238,6 +1238,30 @@
         "facts"
       ],
       "uploaded_at": "2026-04-17T13:07:18.767738+00:00",
+      "stats": {
+        "views": 438,
+        "likes": 19,
+        "comments": 0,
+        "fetched_at": "2026-04-17T16:45:06.065029+00:00"
+      }
+    },
+    {
+      "video_id": "z9OzkKDEv98",
+      "title": "Asteroid Apocalypse 🌊 #Shorts",
+      "topic": "the asteroid that killed the dinosaurs",
+      "tags": [
+        "space",
+        "mystery",
+        "asteroid",
+        "NASA",
+        "dinosaurs",
+        "Chicxulub",
+        "apocalypse",
+        "shorts",
+        "science",
+        "facts"
+      ],
+      "uploaded_at": "2026-04-17T16:52:54.009972+00:00",
       "stats": null
     }
   ]

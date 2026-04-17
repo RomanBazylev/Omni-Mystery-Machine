@@ -1104,10 +1104,10 @@
       ],
       "uploaded_at": "2026-04-16T13:35:21.669363+00:00",
       "stats": {
-        "views": 509,
-        "likes": 26,
+        "views": 920,
+        "likes": 28,
         "comments": 0,
-        "fetched_at": "2026-04-16T20:40:27.171618+00:00"
+        "fetched_at": "2026-04-17T01:49:04.999429+00:00"
       }
     },
     {
@@ -1125,10 +1125,10 @@
       ],
       "uploaded_at": "2026-04-16T17:13:34.003543+00:00",
       "stats": {
-        "views": 220,
-        "likes": 10,
-        "comments": 1,
-        "fetched_at": "2026-04-16T20:40:27.171618+00:00"
+        "views": 360,
+        "likes": 15,
+        "comments": 2,
+        "fetched_at": "2026-04-17T01:49:04.999429+00:00"
       }
     },
     {
@@ -1148,6 +1148,29 @@
         "science"
       ],
       "uploaded_at": "2026-04-16T20:51:35.232994+00:00",
+      "stats": {
+        "views": 232,
+        "likes": 15,
+        "comments": 0,
+        "fetched_at": "2026-04-17T01:49:04.999429+00:00"
+      }
+    },
+    {
+      "video_id": "jyprgY2x35g",
+      "title": "186,282 mi/s Limit 🚀 #Shorts",
+      "topic": "the speed of light as a universal limit",
+      "tags": [
+        "space",
+        "mystery",
+        "shorts",
+        "speedoflight",
+        "einstein",
+        "theoryofrelativity",
+        "physics",
+        "science",
+        "facts"
+      ],
+      "uploaded_at": "2026-04-17T01:58:53.594713+00:00",
       "stats": null
     }
   ]

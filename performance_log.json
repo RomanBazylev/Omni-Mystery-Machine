@@ -1104,10 +1104,10 @@
       ],
       "uploaded_at": "2026-04-16T13:35:21.669363+00:00",
       "stats": {
-        "views": 929,
+        "views": 930,
         "likes": 28,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1125,10 +1125,10 @@
       ],
       "uploaded_at": "2026-04-16T17:13:34.003543+00:00",
       "stats": {
-        "views": 1022,
+        "views": 1023,
         "likes": 32,
         "comments": 2,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1149,10 +1149,10 @@
       ],
       "uploaded_at": "2026-04-16T20:51:35.232994+00:00",
       "stats": {
-        "views": 548,
-        "likes": 28,
+        "views": 648,
+        "likes": 33,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1172,10 +1172,10 @@
       ],
       "uploaded_at": "2026-04-17T01:58:53.594713+00:00",
       "stats": {
-        "views": 1050,
+        "views": 1052,
         "likes": 27,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1196,10 +1196,10 @@
       ],
       "uploaded_at": "2026-04-17T06:08:37.490971+00:00",
       "stats": {
-        "views": 955,
+        "views": 958,
         "likes": 35,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1221,7 +1221,7 @@
         "views": 1025,
         "likes": 61,
         "comments": 7,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1242,7 +1242,7 @@
         "views": 705,
         "likes": 17,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1263,10 +1263,10 @@
       ],
       "uploaded_at": "2026-04-17T16:52:54.009972+00:00",
       "stats": {
-        "views": 633,
+        "views": 642,
         "likes": 25,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1286,10 +1286,10 @@
       ],
       "uploaded_at": "2026-04-17T20:50:23.140881+00:00",
       "stats": {
-        "views": 537,
+        "views": 541,
         "likes": 26,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1310,10 +1310,10 @@
       ],
       "uploaded_at": "2026-04-18T01:36:33.238601+00:00",
       "stats": {
-        "views": 899,
-        "likes": 19,
+        "views": 1072,
+        "likes": 20,
         "comments": 0,
-        "fetched_at": "2026-04-18T05:29:56.863751+00:00"
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
       }
     },
     {
@@ -1332,6 +1332,29 @@
         "science"
       ],
       "uploaded_at": "2026-04-18T05:36:26.157446+00:00",
+      "stats": {
+        "views": 1174,
+        "likes": 25,
+        "comments": 0,
+        "fetched_at": "2026-04-18T08:39:53.096671+00:00"
+      }
+    },
+    {
+      "video_id": "i2hfMo5ia2Q",
+      "title": "Quantum Tunneling: 10^-18m barrier breach 🚀 #Shorts",
+      "topic": "quantum tunneling through solid walls",
+      "tags": [
+        "space",
+        "mystery",
+        "shorts",
+        "quantum mechanics",
+        "tunneling",
+        "particle physics",
+        "solid state physics",
+        "science",
+        "facts"
+      ],
+      "uploaded_at": "2026-04-18T08:51:02.245812+00:00",
       "stats": null
     }
   ]

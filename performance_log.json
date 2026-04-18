@@ -1104,10 +1104,10 @@
       ],
       "uploaded_at": "2026-04-16T13:35:21.669363+00:00",
       "stats": {
-        "views": 928,
+        "views": 929,
         "likes": 28,
         "comments": 0,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1125,10 +1125,10 @@
       ],
       "uploaded_at": "2026-04-16T17:13:34.003543+00:00",
       "stats": {
-        "views": 1017,
+        "views": 1021,
         "likes": 32,
         "comments": 2,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1149,10 +1149,10 @@
       ],
       "uploaded_at": "2026-04-16T20:51:35.232994+00:00",
       "stats": {
-        "views": 487,
-        "likes": 24,
+        "views": 512,
+        "likes": 25,
         "comments": 0,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1172,10 +1172,10 @@
       ],
       "uploaded_at": "2026-04-17T01:58:53.594713+00:00",
       "stats": {
-        "views": 1048,
+        "views": 1050,
         "likes": 27,
         "comments": 0,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1196,10 +1196,10 @@
       ],
       "uploaded_at": "2026-04-17T06:08:37.490971+00:00",
       "stats": {
-        "views": 954,
+        "views": 955,
         "likes": 35,
         "comments": 0,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1218,10 +1218,10 @@
       ],
       "uploaded_at": "2026-04-17T09:17:15.773234+00:00",
       "stats": {
-        "views": 1018,
+        "views": 1023,
         "likes": 61,
         "comments": 7,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1239,10 +1239,10 @@
       ],
       "uploaded_at": "2026-04-17T13:07:18.767738+00:00",
       "stats": {
-        "views": 696,
+        "views": 705,
         "likes": 17,
         "comments": 0,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1263,10 +1263,10 @@
       ],
       "uploaded_at": "2026-04-17T16:52:54.009972+00:00",
       "stats": {
-        "views": 320,
-        "likes": 21,
+        "views": 617,
+        "likes": 25,
         "comments": 0,
-        "fetched_at": "2026-04-17T20:38:02.874178+00:00"
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
       }
     },
     {
@@ -1285,6 +1285,30 @@
         "facts"
       ],
       "uploaded_at": "2026-04-17T20:50:23.140881+00:00",
+      "stats": {
+        "views": 403,
+        "likes": 26,
+        "comments": 0,
+        "fetched_at": "2026-04-18T01:27:39.511994+00:00"
+      }
+    },
+    {
+      "video_id": "iC6I4D8yufw",
+      "title": "Zodiac Killer's 340-Character Cipher 🚀 #Shorts",
+      "topic": "the Zodiac Killer's unsolved ciphers",
+      "tags": [
+        "space",
+        "mystery",
+        "zodiac",
+        "ciphers",
+        "unsolved",
+        "truecrime",
+        "shorts",
+        "voidchronicles",
+        "science",
+        "facts"
+      ],
+      "uploaded_at": "2026-04-18T01:36:33.238601+00:00",
       "stats": null
     }
   ]
